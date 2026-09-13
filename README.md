@@ -1,153 +1,110 @@
-# ⚡ PowerSense AI
+# ⚡ PowerSense AI — Pakistan Electricity Bill Intelligence & Verification System
 
-An intelligent electricity-bill assistant with **real RAG (Retrieval-Augmented Generation)**:
-upload your electricity bill (or any related PDF), and PowerSense AI indexes it, answers
-questions grounded in it, and generates a **personalized, AI-written savings plan** — powered
-by [Groq](https://groq.com)'s fast LLM inference. Built with **Streamlit**.
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://powersense-ai2-ge5yixnuauquakhbuaaw5n.streamlit.app/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 
----
-
-## ✨ Features
-
-- **📄 Real PDF ingestion** — upload your electricity bill (or a tariff notice, FAQ, etc.).
-  Text is extracted with `pypdf`, chunked, and indexed with TF-IDF (`scikit-learn`) — a real
-  retrieval index, not a hardcoded lookup.
-- **🤖 RAG-grounded AI Assistant** — ask questions in plain language. Retrieved chunks (from
-  the built-in knowledge base **and** anything you've uploaded) are passed to Groq's LLM as
-  context, so answers are grounded in real content. Without an API key, you still get honest
-  retrieval-only answers assembled directly from the indexed text.
-- **💡 AI-generated savings suggestions** — a personalized plan (not a generic list) built from
-  your actual bill data, a calculated baseline, and RAG context from your own documents.
-- **🧾 Bill Analyzer** — extracts consumer ID, units, readings, due date, and total from an
-  uploaded PDF via regex; missing fields fall back to clearly-labeled demo data.
-- **📊 Consumption analytics, anomaly detection, and a savings simulator.**
-- **🎨 Professional UI** — custom theming (indigo/emerald palette, clean cards, KPI tiles).
-- **Honest about what's real** — see the header comment in `app.py` for exactly what's live
-  computation vs. simplified/simulated demo data (e.g. the 12-month consumption history is
-  synthetic; there's no OCR for scanned/image bills yet).
+**PowerSense AI** is a state-of-the-art electricity bill transparency, mathematical verification, and regulatory intelligence platform built specifically for Pakistani electricity consumers across all distribution companies (**FESCO, IESCO, LESCO, GEPCO, MEPCO, PESCO, HESCO, SEPCO, QESCO, and K-Electric**).
 
 ---
 
-## 🗂 Project structure
+## 🌟 Key Upgrades in This Version
 
+1. **PDF is the Source of Truth — 100% Real Bill History**:
+   - Previous versions generated synthetic 12-month series or showed "Not available" when LLM regex failed.
+   - The upgraded engine extracts the **genuine 12-month consumption, billed amount, and payment history** actually printed on Pakistani bills (e.g. Aug 2025 – Jul 2026 + current Aug 2026 month).
+   - **Zero fabricated or synthetic numbers**.
+
+2. **Dedicated "BILL CHECK — PDF Verification" Engine**:
+   - Automated mathematical audit matching NEPRA consumer regulations:
+     - ✅ **Meter Reading Check**: `Present Reading − Previous Reading = Units Consumed` (Exact match).
+     - ✅ **Current Bill Check**: `Net Electricity Charges + Taxes = Current Bill` (Exact match).
+     - ✅ **Grand Total Check**: `Current Bill + Total FPA = Payable Within Due Date` (Exact match).
+     - ✅ **Subsidy Check**: `Gross Charges − Protected Subsidy = Net Charges` (Verified).
+     - ✅ **Payment Check**: Confirms payment date and settlement against outstanding dues (0 arrears).
+     - ✅ **Consumption Anomaly Analysis**: Compares current usage against previous month, 12-month average, and peak month to detect true anomalies rather than normal seasonal domestic cooling patterns.
+     - 🟡 **Regulatory Component Analysis (FPA)**: Accurately explains Fuel Price Adjustment as a statutory NEPRA generation mix variation rather than an overbilling error.
+
+3. **10/10 Modern Interactive Visual Interface**:
+   - Plotly-powered dynamic charts:
+     - 12-Month Consumption Trend (kWh) with historical average line and 200 kWh Protected Slab Threshold.
+     - Monthly Billed Amount vs Consumer Payment History.
+     - True Bill Net Flow Waterfall (Gross Energy → Subsidy → Net Energy → Taxes → FPA → Grand Total) with zero duplicate double counting.
+     - Cost-Per-Unit (PKR/kWh) metric trend over time.
+
+4. **Transparent Interval Data Disclosure**:
+   - Transparently clarifies that monthly induction/electronic meters record cumulative monthly kWh, and hourly/24-hour load profiles are not manufactured without smart AMI meters.
+
+5. **Hypothetical Savings Simulator**:
+   - Explicitly separated from actual bill data.
+   - Allows users to model hypothetical appliance usage reductions (e.g., Inverter AC runtime reduction, LED retrofits).
+   - Monitors the 200 kWh threshold to safeguard Protected Consumer status.
+
+6. **Grounded RAG & Groq LLM Assistant**:
+   - Cross-references extracted bill figures with official NEPRA Consumer Service Manual (CSM) and tariff schedules in `knowledge/`.
+   - Supports English, Urdu (اردو), and Roman Urdu.
+
+7. **Formal Complaint Assistant**:
+   - Identifies legitimate billing disputes and drafts formal, factual letters citing meter numbers, dates, and reference IDs.
+   - Provides verified direct links to the official [NEPRA Consumer Complaint Portal](https://www.nepra.org.pk/Complaint.php).
+
+---
+
+## 📁 Repository Structure
+
+```text
+├── app.py                 # Main Streamlit 10/10 application
+├── rag_utils.py           # Bill parser, verification engine & RAG pipeline
+├── requirements.txt       # Python dependencies (Streamlit, Plotly, PyPDF, Groq, etc.)
+├── packages.txt           # Debian apt packages for Streamlit Cloud (Tesseract OCR)
+├── apt_packages.txt       # System package aliases
+├── knowledge/             # Official NEPRA & DISCO reference PDFs
+│   ├── 01_NEPRA_Consumer_Service_Manual_2025_Summary.pdf
+│   ├── 02_FESCO_2026_Tariff_Reference.pdf
+│   ├── 03_NEPRA_Complaint_Handling_Rules_2015_Summary.pdf
+│   └── 04_PowerSense_Bill_Verification_Guide.pdf
+└── README.md              # Project documentation
 ```
-powersense-ai/
-├── app.py                        # Streamlit app
-├── requirements.txt
-├── .env.example                  # Template for local env vars
-├── .streamlit/
-│   ├── config.toml               # Theme (already configured, no action needed)
-│   └── secrets.toml.example      # Template for Streamlit Cloud secrets
-├── .gitignore
-└── README.md
-```
 
 ---
 
-## 🚀 Quickstart (local)
+## 🚀 Deployment on Streamlit Cloud
+
+1. Upload all 4 core files (`app.py`, `rag_utils.py`, `requirements.txt`, `packages.txt`) along with the `knowledge/` directory to your GitHub repository:
+   ```bash
+   git add app.py rag_utils.py requirements.txt packages.txt apt_packages.txt README.md knowledge/
+   git commit -m "Upgrade PowerSense AI to 10/10 interface with real bill history and PDF verification"
+   git push origin main
+   ```
+
+2. In [Streamlit Community Cloud](https://share.streamlit.io):
+   - Select your repository: `ahmad123-567/PowerSense-Ai`
+   - Main file path: `app.py`
+   - Under **App Settings → Secrets**, add your Groq API key (optional for basic extraction, required for LLM chat):
+     ```toml
+     GROQ_API_KEY = "gsk_your_groq_api_key_here"
+     ```
+
+3. Deploy! Streamlit Cloud will automatically install Tesseract OCR using `packages.txt` and Python packages using `requirements.txt`.
+
+---
+
+## 💻 Local Quickstart
 
 ```bash
-# 1. Clone your repo
-git clone https://github.com/<your-username>/powersense-ai.git
-cd powersense-ai
+# 1. Clone repository
+git clone https://github.com/ahmad123-567/PowerSense-Ai.git
+cd PowerSense-Ai
 
-# 2. Create a virtual environment
-python3 -m venv venv
-source venv/bin/activate        # Windows: venv\Scripts\activate
-
-# 3. Install dependencies
+# 2. Install dependencies
 pip install -r requirements.txt
 
-# 4. Set your Groq API key (free key: https://console.groq.com/keys)
-cp .env.example .env
-# then edit .env and paste your key, OR export it directly:
-export GROQ_API_KEY=your_groq_api_key_here     # Windows: set GROQ_API_KEY=...
-
-# 5. Run the app
+# 3. Launch Streamlit app
 streamlit run app.py
 ```
 
-You don't strictly need a Groq key to run the app — it works in **retrieval-only mode**
-without one, and you can also paste a key directly into the app's Settings page at runtime
-(it's kept in session memory only, never written to disk).
-
 ---
 
-## ☁️ Deploying to Streamlit Community Cloud
+## ⚖️ Regulatory Disclaimer
 
-1. Push this repo to GitHub.
-2. Go to [share.streamlit.io](https://share.streamlit.io) → **New app** → pick your repo,
-   branch, and set the main file to `app.py`.
-3. **Set the Python version explicitly.** In the deploy dialog (or later, in your app's
-   **Settings → General**), pick **Python 3.11 or 3.12** rather than leaving it on the
-   default. Streamlit Cloud's default Python (currently 3.14) is too new for several
-   scientific-Python packages to have pre-built wheels yet, which can cause builds to fail
-   or hang trying to compile from source. `runtime.txt` is **not** honored for this — the
-   version must be picked in the UI.
-4. In **Advanced settings → Secrets**, paste:
-   ```toml
-   GROQ_API_KEY = "your_groq_api_key_here"
-   ```
-   (This is exactly the content of `.streamlit/secrets.toml.example`.)
-5. Deploy. The app reads the key automatically — no code changes needed.
-
-### GitHub (source control)
-
-```bash
-git init
-git add .
-git commit -m "Initial commit: PowerSense AI (Streamlit, Groq-powered RAG)"
-git branch -M main
-git remote add origin https://github.com/<your-username>/powersense-ai.git
-git push -u origin main
-```
-
-`.gitignore` already excludes `.env` and `.streamlit/secrets.toml` so your real key never
-gets committed.
-
----
-
-## 🔑 Getting a Groq API key
-
-1. Go to [console.groq.com/keys](https://console.groq.com/keys) and sign up (free tier
-   available).
-2. Create a new API key (starts with `gsk_...`).
-3. Use it via `.env`, Streamlit secrets, an exported environment variable, or paste it
-   directly into the app's Settings page.
-
-Default model: `llama-3.3-70b-versatile`. Other options you can type into the Model field:
-`llama-3.1-8b-instant` (faster/cheaper), `gemma2-9b-it`. See the full list at
-[console.groq.com/docs/models](https://console.groq.com/docs/models).
-
----
-
-## 🧠 How the RAG pipeline works
-
-1. **Chunking** — uploaded PDF text and built-in knowledge-base articles are split into small,
-   sentence-grouped chunks.
-2. **Indexing** — chunks are vectorized with a TF-IDF vectorizer (unigrams + bigrams,
-   English stop words removed).
-3. **Retrieval** — a user's question is vectorized the same way, and the top-*k* chunks by
-   cosine similarity above a minimum score are retrieved (below the threshold → legitimately
-   zero sources, no forced answer).
-4. **Generation** — retrieved chunks + your bill data are sent to Groq's chat completion API
-   as context, with a system prompt instructing the model to answer only from that context.
-5. **Fallback** — without a Groq key (or if the API call fails), the top retrieved chunk(s)
-   are shown directly, so the app is still useful and never silently fabricates an LLM answer.
-
----
-
-## ⚠️ Known limitations
-
-- No OCR — scanned/image-only PDF bills aren't parsed, only text-based PDFs.
-- The 12-month consumption history is synthetic demo data, labeled as such in the UI.
-- The tariff model is a single flat rate per unit, not a full multi-slab schedule.
-- TF-IDF retrieval is lexical (keyword-based), not a neural embedding search — good for a
-  lightweight, dependency-light demo, but less semantically flexible than an embeddings-based
-  RAG pipeline.
-
----
-
-## 📄 License
-
-Use, modify, and deploy freely for your own project.
+PowerSense AI is an independent informational analysis tool designed to assist Pakistani electricity consumers. It does not replace official tariff determinations by the National Electric Power Regulatory Authority (NEPRA) or official billings issued by distribution companies (DISCOs). All verification findings should be confirmed with the respective utility provider.
