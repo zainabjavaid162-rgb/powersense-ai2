@@ -1,8 +1,8 @@
-streamlit
-pandas
-plotly
-PyMuPDF
-pytesseract
-Pillow
-scikit-learn
-groq
+streamlit>=1.40
+pandas>=2.2
+plotly>=5.24
+PyMuPDF>=1.24
+pytesseract>=0.3.13
+Pillow>=10.0
+scikit-learn>=1.5
+groq>=0.31
